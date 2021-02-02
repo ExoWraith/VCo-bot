@@ -1,0 +1,15 @@
+{
+  "name": "vco-bot",
+  "version": "1.0.0",
+  "description": "VCo Bot",
+  "main": "main.js",
+  "author": "ExoWraith",
+  "dependencies": {
+    "@discordjs/opus": "^0.4.0",
+    "discord-music-player": "^6.4.0",
+    "discord.io": "https://github.com/woor/discord.io/tarball/gateway_v6",
+    "discord.js": "^12.5.1",
+    "winston": "^3.3.3",
+    "ytdl-core-discord": "^1.2.5"
+  }
+}
