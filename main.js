@@ -3,7 +3,8 @@ var logger = require("winston");
 var ytdl = require("ytdl-core-discord");
 var { Player } = require("discord-music-player");
 
-const { prefix, token } = require("./config.json");
+const { prefix } = require("./config.json");
+const { token } = require("./auth.json");
 var fs = require("fs");
 const { stringify } = require("querystring");
 
