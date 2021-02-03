@@ -14,7 +14,7 @@ logger.add(new logger.transports.Console(), {
   colorize: true,
 });
 logger.level = "debug";
-// Initialize Discord Bot
+// Initialize Discord Botgit pull
 
 var client = new Discord.Client({
   token: token,
@@ -49,12 +49,11 @@ client.on("guildMemberAdd", (member) => {
 
 client.on("message", async (message) => {
   if (!message.content.startsWith(prefix) || message.author.bot) return;
-  logger.info(message);
   const args = message.content.slice(prefix.length).trim().split(/ +/);
   const command = args.shift().toLowerCase();
 
-  console.log(args);
-  console.log(command);
+
+  console.log(message.author.username+" sends "+ command+ " - "+args);
 
   if (command == "help") {
     message.channel.send(
