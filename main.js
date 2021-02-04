@@ -6,7 +6,6 @@ var { Player } = require("discord-music-player");
 const { prefix } = require("./config.json");
 const { token } = require("./auth.json");
 var fs = require("fs");
-const { stringify } = require("querystring");
 
 // Configure logger settings
 logger.remove(logger.transports.Console);
@@ -52,8 +51,7 @@ client.on("message", async (message) => {
   const args = message.content.slice(prefix.length).trim().split(/ +/);
   const command = args.shift().toLowerCase();
 
-
-  console.log(message.author.username+" sends "+ command+ " - "+args);
+  console.log(message.author.username + " sends " + command + " - " + args);
 
   if (command == "help") {
     message.channel.send(
@@ -146,150 +144,97 @@ client.on("message", async (message) => {
 
       message.channel.send(`Started playing **${song.name}**!`);
       client.user.setActivity(`${song.name}`, {
-          type: "LISTENING",
-        });
+        type: "LISTENING",
+      });
 
       message.react("✅");
     }
   }
 
   if (command == "stop") {
-    client.player.stop(message.guild.id);
-    client.user.setActivity("");
-    message.channel.send("Music stopped, the queue has been cleared!");
+    let isPlaying = client.player.isPlaying(message.guild.id);
+    if (isPlaying) {
+      client.player.stop(message.guild.id);
+      client.user.setActivity("");
+      message.channel.send("Music stopped, the queue has been cleared!");
+    } else {
+      message.channel.send("There is no music playing.");
+    }
     message.react("✅");
-    
   }
 
   if (command == "pause") {
-    client.player.pause(message.guild.id);
-    message.channel.send("Music paused!");
+    let isPlaying = client.player.isPlaying(message.guild.id);
+    if (isPlaying) {
+      client.player.pause(message.guild.id);
+      message.channel.send("Music paused!");
+    } else {
+      message.channel.send("There is no music playing.");
+    }
     message.react("✅");
   }
 
   if (command == "resume") {
-    client.player.resume(message.guild.id);
-    message.channel.send("Music resumed!");
+    let isPlaying = client.player.isPlaying(message.guild.id);
+    if (isPlaying) {
+      client.player.resume(message.guild.id);
+      message.channel.send("Music resumed!");
+    } else {
+      message.channel.send("There is no music playing.");
+    }
     message.react("✅");
   }
 
   if (command == "song") {
-    let song = client.player.nowPlaying(message.guild.id);
-    message.channel.send(`Current song: **${song.name}**`);
+    let isPlaying = client.player.isPlaying(message.guild.id);
+    if (isPlaying) {
+      let song = client.player.nowPlaying(message.guild.id);
+      message.channel.send(`Current song: **${song.name}**`);
+    } else {
+      message.channel.send("There is no music playing.");
+    }
     message.react("✅");
   }
 
   if (command === "shuffle") {
-    client.player.shuffle(message.guild.id);
-    message.channel.send("Server Queue was shuffled.");
+    let isPlaying = client.player.isPlaying(message.guild.id);
+    if (isPlaying) {
+      client.player.shuffle(message.guild.id);
+      message.channel.send("Server Queue was shuffled.");
+    } else {
+      message.channel.send("There is no music playing.");
+    }
     message.react("✅");
   }
 
   if (command === "skip") {
-    let song = await client.player.skip(message.guild.id);
-    message.channel.send(`**${song.name}** was skipped!`);
+    let isPlaying = client.player.isPlaying(message.guild.id);
+    if (isPlaying) {
+      let song = await client.player.skip(message.guild.id);
+      message.channel.send(`**${song.name}** was skipped!`);
+    } else {
+      message.channel.send("There is no music playing.");
+    }
     message.react("✅");
   }
 
   if (command === "queue") {
-    let queue = await client.player.getQueue(message.guild.id);
-    message.channel.send(
-      "Current song queue:\n" +
-        queue.songs
-          .map((song, i) => {
-            return `${i === 0 ? "Now Playing" : `#${i + 1}`} - ${song.name} | ${
-              song.author
-            }`;
-          })
-          .join("\n")
-    );
+    let isPlaying = client.player.isPlaying(message.guild.id);
+    if (isPlaying) {
+      let queue = await client.player.getQueue(message.guild.id);
+      message.channel.send(
+        "Current song queue:\n" +
+          queue.songs
+            .map((song, i) => {
+              return `${i === 0 ? "Now Playing" : `#${i + 1}`} - ${
+                song.name
+              } | ${song.author}`;
+            })
+            .join("\n")
+      );
+    } else {
+      message.channel.send("There is no music playing.");
+    }
     message.react("✅");
   }
-
-  if (command == "playlist") {
-    if (args[0] == "new") {
-      fs.readFile("playlists.json", "utf8", function readFile(err, data) {
-        if (err) {
-          console.error(err);
-        } else {
-          message.channel.send("Creating new playlist - " + args[1]);
-          playlists = JSON.parse(data);
-          playlists.push({ name: args[1], songs: [] });
-          json = JSON.stringify(playlists);
-          fs.writeFile("playlists.json", json, (err) => console.log(err));
-        }
-      });
-    }
-    if (args[0] == "play") {
-      fs.readFile("playlists.json", "utf8", function readFile(err, data) {
-        if (err) {
-          console.error(err);
-        } else {
-          playlists = JSON.parse(data);
-          console.log(playlists);
-          playlists.forEach((element) => {
-            if (element.name == args[1]) {
-              element.songs.forEach((song) => {
-                const channel = message.member.voice.channel;
-                channel
-                  .join()
-                  .then((connection) => {
-                    this.audioDispatcher = connection.dispatcher;
-                    play(connection, song);
-                    message.channel.send(
-                      "Playing playlist " + args[1] + " in " + channel.name
-                    );
-                  })
-                  .catch((error) => console.error(error));
-              });
-            }
-          });
-        }
-      });
-    }
-    if (args[0] == "show") {
-      fs.readFile("playlists.json", "utf8", function readFile(err, data) {
-        if (err) {
-          console.error(err);
-        } else {
-          playlists = JSON.parse(data);
-          message.channel.send("Songs in playlist - " + args[1]);
-          playlists.forEach((element) => {
-            if (element.name == args[1]) {
-              element.songs.forEach((song) => {
-                var i = 0;
-                message.channel.send(i + " - " + song);
-                i++;
-              });
-            }
-          });
-          json = JSON.stringify(playlists);
-          fs.writeFile("playlists.json", json, (err) => console.log(err));
-        }
-      });
-    }
-    if (args[0] == "add") {
-      fs.readFile("playlists.json", "utf8", function readFile(err, data) {
-        if (err) {
-          console.error(err);
-        } else {
-          playlists = JSON.parse(data);
-          playlists.forEach((element) => {
-            if (element.name == args[1]) {
-              element.songs.push(args[2]);
-              message.channel.send(
-                "Added - " + args[2] + " to playlist " + args[1]
-              );
-            }
-          });
-          json = JSON.stringify(playlists);
-          fs.writeFile("playlists.json", json, (err) => console.log(err));
-        }
-      });
-    }
-  }
 });
-
-async function play(connection, url) {
-  return connection.play(await ytdl(url), { type: "opus", volume: false });
-}
